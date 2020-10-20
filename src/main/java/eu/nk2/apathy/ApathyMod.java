@@ -62,8 +62,6 @@ public class ApathyMod implements ModInitializer {
 			return (EntityType.EntityFactory<Entity>) factoryField.get(entityType);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			log.error("For " + entityType.toString() + ": ", e);
-			e.printStackTrace();
-
 			return null;
 		}
 	}
@@ -77,8 +75,6 @@ public class ApathyMod implements ModInitializer {
 			return entityType;
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			log.error("For " + entityType.toString() + ": ", e);
-			e.printStackTrace();
-
 			return null;
 		}
 	}
@@ -104,8 +100,6 @@ public class ApathyMod implements ModInitializer {
 			return (Set<Goal>) goalSetField.get(goalSelector);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			log.error("For " + mobEntity.toString() + ": ", e);
-			e.printStackTrace();
-
 			return null;
 		}
 	}
@@ -119,8 +113,6 @@ public class ApathyMod implements ModInitializer {
 			return targetClass.equals(PlayerEntity.class);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			log.error("For " + followTargetGoal.toString() + ": ", e);
-			e.printStackTrace();
-
 			return false;
 		}
 	}
@@ -138,13 +130,15 @@ public class ApathyMod implements ModInitializer {
 //						Set<Goal> goalSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.GOAL_SELECTOR);
 
 						Set<Goal> targetSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.TARGET_SELECTOR);
-						targetSelectorSet.removeAll(
+
+						if(targetSelectorSet != null)
+							targetSelectorSet.removeAll(
 								targetSelectorSet.stream()
-										.map((goal) -> (PrioritizedGoal) goal)
-										.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
-										.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
-										.collect(Collectors.toList())
-						);
+									.map((goal) -> (PrioritizedGoal) goal)
+									.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
+									.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
+									.collect(Collectors.toList())
+							);
 					}
 
 					return entity;

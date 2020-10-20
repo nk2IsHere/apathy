@@ -20,47 +20,15 @@ import java.util.stream.Collectors;
 
 public class ApathyMod implements ModInitializer {
 
-	private enum ApathyModFieldMappings {
-		KEY_EntityFactory_factory,
-		KEY_MobEntity_goalSelector,
-		KEY_MobEntity_targetSelector,
-		KEY_GoalSelector_goals,
-		KEY_FollowTargetGoal_targetClass;
-
-		private static final boolean DEBUG_MAPPINGS = false;
-
-		private static final Map<String, String> MAPPING_DEBUG = new HashMap<String, String>() {{
-			this.put(KEY_EntityFactory_factory.name(), "factory");
-			this.put(KEY_MobEntity_goalSelector.name(), "goalSelector");
-			this.put(KEY_MobEntity_targetSelector.name(), "targetSelector");
-			this.put(KEY_GoalSelector_goals.name(), "goals");
-			this.put(KEY_FollowTargetGoal_targetClass.name(), "targetClass");
-		}};
-
-		private static final Map<String, String> MAPPING_PRODUCTION = new HashMap<String, String>() {{
-			this.put(KEY_EntityFactory_factory.name(), "field_6101");
-			this.put(KEY_MobEntity_goalSelector.name(), "field_6201");
-			this.put(KEY_MobEntity_targetSelector.name(), "field_6185");
-			this.put(KEY_GoalSelector_goals.name(), "field_6461");
-			this.put(KEY_FollowTargetGoal_targetClass.name(), "field_6643");
-		}};
-
-		public String getMapping() {
-			return DEBUG_MAPPINGS?
-				MAPPING_DEBUG.get(this.name())
-				: MAPPING_PRODUCTION.get(this.name());
-		}
-	}
-
 	private final Logger log = LogManager.getLogger();
 
 	private EntityType.EntityFactory<Entity> getEntityFactory(EntityType<Entity> entityType) {
 		try {
-			Field factoryField = entityType.getClass().getDeclaredField(ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping());
+			Field factoryField = ReflectionUtils.findField(entityType.getClass(), ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping(), null);
 			factoryField.setAccessible(true);
 
 			return (EntityType.EntityFactory<Entity>) factoryField.get(entityType);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		} catch (NullPointerException | IllegalAccessException e) {
 			log.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
@@ -68,12 +36,12 @@ public class ApathyMod implements ModInitializer {
 
 	private EntityType<Entity> setEntityFactory(EntityType<Entity> entityType, EntityType.EntityFactory<Entity> entityFactory) {
 		try {
-			Field factoryField = entityType.getClass().getDeclaredField(ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping());
+			Field factoryField = ReflectionUtils.findField(entityType.getClass(), ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping(), null);
 			factoryField.setAccessible(true);
 
 			factoryField.set(entityType, entityFactory);
 			return entityType;
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		} catch (NullPointerException | IllegalAccessException e) {
 			log.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
@@ -91,14 +59,14 @@ public class ApathyMod implements ModInitializer {
 	}
 	private Set<Goal> getGoalSetFromMobEntitySelector(MobEntity mobEntity, GoalSelectorFieldName goalSelectorFieldName) {
 		try {
-			Field goalSelectorField = mobEntity.getClass().getField(goalSelectorFieldName.mapping.getMapping());
+			Field goalSelectorField = ReflectionUtils.findField(mobEntity.getClass(), goalSelectorFieldName.mapping.getMapping(), null);
 			goalSelectorField.setAccessible(true);
 			GoalSelector goalSelector = (GoalSelector) goalSelectorField.get(mobEntity);
 
-			Field goalSetField = goalSelector.getClass().getDeclaredField(ApathyModFieldMappings.KEY_GoalSelector_goals.getMapping());
+			Field goalSetField = ReflectionUtils.findField(goalSelector.getClass(), ApathyModFieldMappings.KEY_GoalSelector_goals.getMapping(), null);
 			goalSetField.setAccessible(true);
 			return (Set<Goal>) goalSetField.get(goalSelector);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		} catch (NullPointerException | IllegalAccessException e) {
 			log.error("For " + mobEntity.toString() + ": ", e);
 			return null;
 		}
@@ -106,12 +74,12 @@ public class ApathyMod implements ModInitializer {
 
 	private boolean isPlayerFollowTargetGoal(FollowTargetGoal<?> followTargetGoal) {
 		try {
-			Field targetClassField = followTargetGoal.getClass().getField(ApathyModFieldMappings.KEY_FollowTargetGoal_targetClass.getMapping());
+			Field targetClassField = ReflectionUtils.findField(followTargetGoal.getClass(), ApathyModFieldMappings.KEY_FollowTargetGoal_targetClass.getMapping(), null);
 			targetClassField.setAccessible(true);
 			Class<?> targetClass = (Class<?>) targetClassField.get(followTargetGoal);
 
 			return targetClass.equals(PlayerEntity.class);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		} catch (NullPointerException | IllegalAccessException e) {
 			log.error("For " + followTargetGoal.toString() + ": ", e);
 			return false;
 		}
@@ -127,8 +95,6 @@ public class ApathyMod implements ModInitializer {
 					Entity entity = entityTypeToFactory.getRight().create(type, world);
 
 					if (entity instanceof MobEntity) {
-//						Set<Goal> goalSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.GOAL_SELECTOR);
-
 						Set<Goal> targetSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.TARGET_SELECTOR);
 
 						if(targetSelectorSet != null)

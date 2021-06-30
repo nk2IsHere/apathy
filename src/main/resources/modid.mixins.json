@@ -4,6 +4,10 @@
   "package": "eu.nk2.apathy.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "ApathyMixinEntityFactoryAccessor",
+    "ApathyMixinFollowTargetGoalAccessor",
+    "ApathyMixinGoalSelectorAccessor",
+    "ApathyMixinMobEntityAccessor"
   ],
   "client": [
   ],

@@ -1,5 +1,9 @@
 package eu.nk2.apathy;
 
+import eu.nk2.apathy.mixin.ApathyMixinEntityFactoryAccessor;
+import eu.nk2.apathy.mixin.ApathyMixinFollowTargetGoalAccessor;
+import eu.nk2.apathy.mixin.ApathyMixinGoalSelectorAccessor;
+import eu.nk2.apathy.mixin.ApathyMixinMobEntityAccessor;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -14,8 +18,8 @@ import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ApathyMod implements ModInitializer {
@@ -24,11 +28,8 @@ public class ApathyMod implements ModInitializer {
 
 	private EntityType.EntityFactory<Entity> getEntityFactory(EntityType<Entity> entityType) {
 		try {
-			Field factoryField = ReflectionUtils.findField(entityType.getClass(), ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping(), null);
-			factoryField.setAccessible(true);
-
-			return (EntityType.EntityFactory<Entity>) factoryField.get(entityType);
-		} catch (NullPointerException | IllegalAccessException e) {
+			return ((ApathyMixinEntityFactoryAccessor) entityType).getFactory();
+		} catch (Exception e) {
 			log.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
@@ -36,37 +37,32 @@ public class ApathyMod implements ModInitializer {
 
 	private EntityType<Entity> setEntityFactory(EntityType<Entity> entityType, EntityType.EntityFactory<Entity> entityFactory) {
 		try {
-			Field factoryField = ReflectionUtils.findField(entityType.getClass(), ApathyModFieldMappings.KEY_EntityFactory_factory.getMapping(), null);
-			factoryField.setAccessible(true);
-
-			factoryField.set(entityType, entityFactory);
+			((ApathyMixinEntityFactoryAccessor) entityType).setFactory(entityFactory);
 			return entityType;
-		} catch (NullPointerException | IllegalAccessException e) {
+		} catch (Exception e) {
 			log.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
 	}
 
 	private enum GoalSelectorFieldName {
-		GOAL_SELECTOR(ApathyModFieldMappings.KEY_MobEntity_goalSelector),
-		TARGET_SELECTOR(ApathyModFieldMappings.KEY_MobEntity_targetSelector);
-
-		public final ApathyModFieldMappings mapping;
-
-		GoalSelectorFieldName(ApathyModFieldMappings mapping) {
-			this.mapping = mapping;
-		}
+		GOAL_SELECTOR,
+		TARGET_SELECTOR
 	}
 	private Set<Goal> getGoalSetFromMobEntitySelector(MobEntity mobEntity, GoalSelectorFieldName goalSelectorFieldName) {
 		try {
-			Field goalSelectorField = ReflectionUtils.findField(mobEntity.getClass(), goalSelectorFieldName.mapping.getMapping(), null);
-			goalSelectorField.setAccessible(true);
-			GoalSelector goalSelector = (GoalSelector) goalSelectorField.get(mobEntity);
+			GoalSelector goalSelector = null;
+			switch (goalSelectorFieldName) {
+				case GOAL_SELECTOR:
+					goalSelector = ((ApathyMixinMobEntityAccessor) mobEntity).getGoalSelector();
+					break;
+				case TARGET_SELECTOR:
+					goalSelector = ((ApathyMixinMobEntityAccessor) mobEntity).getTargetSelector();
+					break;
+			}
 
-			Field goalSetField = ReflectionUtils.findField(goalSelector.getClass(), ApathyModFieldMappings.KEY_GoalSelector_goals.getMapping(), null);
-			goalSetField.setAccessible(true);
-			return (Set<Goal>) goalSetField.get(goalSelector);
-		} catch (NullPointerException | IllegalAccessException e) {
+			return ((ApathyMixinGoalSelectorAccessor) goalSelector).getGoals();
+		} catch (Exception e) {
 			log.error("For " + mobEntity.toString() + ": ", e);
 			return null;
 		}
@@ -74,12 +70,9 @@ public class ApathyMod implements ModInitializer {
 
 	private boolean isPlayerFollowTargetGoal(FollowTargetGoal<?> followTargetGoal) {
 		try {
-			Field targetClassField = ReflectionUtils.findField(followTargetGoal.getClass(), ApathyModFieldMappings.KEY_FollowTargetGoal_targetClass.getMapping(), null);
-			targetClassField.setAccessible(true);
-			Class<?> targetClass = (Class<?>) targetClassField.get(followTargetGoal);
-
+			Class<?> targetClass = ((ApathyMixinFollowTargetGoalAccessor) followTargetGoal).getTargetClass();
 			return targetClass.equals(PlayerEntity.class);
-		} catch (NullPointerException | IllegalAccessException e) {
+		} catch (Exception e) {
 			log.error("For " + followTargetGoal.toString() + ": ", e);
 			return false;
 		}
@@ -98,13 +91,12 @@ public class ApathyMod implements ModInitializer {
 						Set<Goal> targetSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.TARGET_SELECTOR);
 
 						if(targetSelectorSet != null)
-							targetSelectorSet.removeAll(
-								targetSelectorSet.stream()
-									.map((goal) -> (PrioritizedGoal) goal)
-									.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
-									.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
-									.collect(Collectors.toList())
-							);
+							targetSelectorSet.stream()
+								.map((goal) -> (PrioritizedGoal) goal)
+								.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
+								.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
+								.collect(Collectors.toList())
+								.forEach(targetSelectorSet::remove);
 					}
 
 					return entity;

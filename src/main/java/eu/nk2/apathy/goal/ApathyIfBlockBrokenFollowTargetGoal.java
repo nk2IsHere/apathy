@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<PlayerEntity> implements OnBlockBrokenEventHandler {
-    private final float minimalReactionDistance;
+    private final float maximalReactionDistance;
     private final Block reactionBlock;
 
     public ApathyIfBlockBrokenFollowTargetGoal(
@@ -22,12 +22,12 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
         boolean checkVisibility,
         boolean checkCanNavigate,
         TargetPredicate targetPredicate,
-        float minimalReactionDistance,
+        float maximalReactionDistance,
         Block reactionBlock
     ) {
         super(mob, PlayerEntity.class, reciprocalChance, checkVisibility, checkCanNavigate, null);
         this.targetPredicate = targetPredicate;
-        this.minimalReactionDistance = minimalReactionDistance;
+        this.maximalReactionDistance = maximalReactionDistance;
         this.reactionBlock = reactionBlock;
 
         OnBlockBrokenEventRegistry.INSTANCE.registerOnBlockBrokenHandler(this);
@@ -37,7 +37,7 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
     public void onBlockBroken(World world, BlockPos pos, BlockState state, PlayerEntity player) {
         if(player instanceof ServerPlayerEntity) {
             System.out.println("[" + mob + "]Block broken: " + player + " " + state);
-            if(mob.distanceTo(player) <= this.minimalReactionDistance && state.getBlock().is(reactionBlock)) {
+            if(mob.distanceTo(player) <= this.maximalReactionDistance && state.getBlock().is(reactionBlock)) {
                 System.out.println("Perform follow on: " + player);
                 this.targetEntity = player;
             }

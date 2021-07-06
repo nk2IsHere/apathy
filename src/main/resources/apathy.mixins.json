@@ -7,7 +7,8 @@
     "ApathyMixinEntityFactoryAccessor",
     "ApathyMixinFollowTargetGoalAccessor",
     "ApathyMixinGoalSelectorAccessor",
-    "ApathyMixinMobEntityAccessor"
+    "ApathyMixinMobEntityAccessor",
+    "ApathyMixinTrackTargetGoalAccessor"
   ],
   "client": [
   ],

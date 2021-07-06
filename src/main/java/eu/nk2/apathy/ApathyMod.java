@@ -1,12 +1,12 @@
 package eu.nk2.apathy;
 
-import eu.nk2.apathy.mixin.ApathyMixinEntityFactoryAccessor;
-import eu.nk2.apathy.mixin.ApathyMixinFollowTargetGoalAccessor;
-import eu.nk2.apathy.mixin.ApathyMixinGoalSelectorAccessor;
-import eu.nk2.apathy.mixin.ApathyMixinMobEntityAccessor;
+import eu.nk2.apathy.goal.ApathyFollowTargetGoal;
+import eu.nk2.apathy.mixin.*;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.FollowTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.GoalSelector;
@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ApathyMod implements ModInitializer {
@@ -89,14 +90,30 @@ public class ApathyMod implements ModInitializer {
 
 					if (entity instanceof MobEntity) {
 						Set<Goal> targetSelectorSet = getGoalSetFromMobEntitySelector((MobEntity) entity, GoalSelectorFieldName.TARGET_SELECTOR);
-
 						if(targetSelectorSet != null)
 							targetSelectorSet.stream()
 								.map((goal) -> (PrioritizedGoal) goal)
 								.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
 								.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
 								.collect(Collectors.toList())
-								.forEach(targetSelectorSet::remove);
+								.forEach((PrioritizedGoal goal) -> {
+									FollowTargetGoal<PlayerEntity> followTargetGoal = (FollowTargetGoal<PlayerEntity>) goal.getGoal();
+									ApathyMixinFollowTargetGoalAccessor followTargetGoalAccessor = (ApathyMixinFollowTargetGoalAccessor) followTargetGoal;
+									ApathyMixinTrackTargetGoalAccessor trackTargetGoalAccessor = (ApathyMixinTrackTargetGoalAccessor) followTargetGoal;
+
+									targetSelectorSet.remove(goal);
+									targetSelectorSet.add(new PrioritizedGoal(
+										goal.getPriority(),
+										new ApathyFollowTargetGoal<>(
+											(MobEntity) entity,
+											PlayerEntity.class,
+											followTargetGoalAccessor.getReciprocalChance(),
+											trackTargetGoalAccessor.getCheckVisibility(),
+											trackTargetGoalAccessor.getCheckVisibility(),
+											followTargetGoalAccessor.getTargetPredicate()
+										)
+									));
+								});
 					}
 
 					return entity;

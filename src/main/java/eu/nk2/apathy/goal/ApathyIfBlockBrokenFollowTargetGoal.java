@@ -36,9 +36,9 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
     @Override
     public void onBlockBroken(World world, BlockPos pos, BlockState state, PlayerEntity player) {
         if(player instanceof ServerPlayerEntity) {
-            System.out.println("[" + mob + "]Block broken: " + player + " " + state);
+            System.out.println("[" + mob + "] Block broken: " + player + " " + state);
             if(mob.distanceTo(player) <= this.maximalReactionDistance && state.getBlock().is(reactionBlock)) {
-                System.out.println("Perform follow on: " + player);
+                System.out.println("[" + mob + "] Perform follow on: " + player);
                 this.targetEntity = player;
             }
         }

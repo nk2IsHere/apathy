@@ -14,6 +14,7 @@ public interface OnBlockBrokenEventRegistry {
     void publishOnBlockBrokenEvent(World world, BlockPos pos, BlockState state, PlayerEntity player);
 
     OnBlockBrokenEventRegistry INSTANCE = new OnBlockBrokenEventRegistry() {
+
         private final ArrayList<OnBlockBrokenEventHandler> onBlockBrokenEventHandlers = new ArrayList<>();
 
         @Override

@@ -4,6 +4,7 @@
   "package": "eu.nk2.apathy.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "ApathyMixinBlockInjector",
     "ApathyMixinEntityFactoryAccessor",
     "ApathyMixinFollowTargetGoalAccessor",
     "ApathyMixinGoalSelectorAccessor",

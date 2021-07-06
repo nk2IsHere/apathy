@@ -1,18 +1,18 @@
 package eu.nk2.apathy;
 
-import eu.nk2.apathy.goal.ApathyFollowTargetGoal;
+import eu.nk2.apathy.goal.ApathyDoNotFollowTargetGoal;
+import eu.nk2.apathy.goal.ApathyIfBlockBrokenFollowTargetGoal;
 import eu.nk2.apathy.mixin.*;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.FollowTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +20,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ApathyMod implements ModInitializer {
@@ -104,13 +103,14 @@ public class ApathyMod implements ModInitializer {
 									targetSelectorSet.remove(goal);
 									targetSelectorSet.add(new PrioritizedGoal(
 										goal.getPriority(),
-										new ApathyFollowTargetGoal<>(
+										new ApathyIfBlockBrokenFollowTargetGoal(
 											(MobEntity) entity,
-											PlayerEntity.class,
 											followTargetGoalAccessor.getReciprocalChance(),
 											trackTargetGoalAccessor.getCheckVisibility(),
 											trackTargetGoalAccessor.getCheckVisibility(),
-											followTargetGoalAccessor.getTargetPredicate()
+											followTargetGoalAccessor.getTargetPredicate(),
+											16.0f,
+											Registry.BLOCK.get(Identifier.tryParse("minecraft:sandstone"))
 										)
 									));
 								});

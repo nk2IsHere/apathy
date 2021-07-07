@@ -8,15 +8,15 @@ import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.FollowTargetGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<PlayerEntity> {
+    private final Logger logger = LogManager.getLogger("Apathy");
+
     private final float maximalReactionDistance;
     private final Block reactionBlock;
 
@@ -40,16 +40,19 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
         this.reactionBlock = reactionBlock;
 
         this.onBlockBrokenHandlerId = OnBlockBrokenEventRegistry.INSTANCE.registerOnBlockBrokenHandler((pos, state, playerUuid) -> {
-            System.out.println("[" + mob + "] Block broken: " + playerUuid + " " + state);
-            if(state.getBlock().is(this.reactionBlock)) {
-                System.out.println("[" + mob + "] Perform follow on: " + playerUuid);
+            PlayerEntity player = this.mob.world.getPlayerByUuid(playerUuid);
+            if(player == null) return;
+
+            logger.info("[" + this.mob + "] Block broken: " + playerUuid + " " + state);
+            if(state.getBlock().is(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
+                logger.info("[" + this.mob + "] Perform follow on: " + playerUuid);
                 playerMemory.put(playerUuid, state);
             }
         });
 
         this.onLivingEntityDeadHandlerId = OnLivingEntityDeadEventRegistry.INSTANCE.registerOnLivingEntityDeadHandler((world, livingEntity, damageSource) -> {
-            if(mob.getEntityId() == livingEntity.getEntityId()) {
-                System.out.println("[" + mob + "] Unregister goal from events");
+            if(this.mob.getEntityId() == livingEntity.getEntityId()) {
+                logger.info("[" + this.mob + "] Unregister goal from events");
                 OnBlockBrokenEventRegistry.INSTANCE.unregisterOnBlockBrokenHandler(onBlockBrokenHandlerId);
                 OnLivingEntityDeadEventRegistry.INSTANCE.unregisterOnLivingEntityDeadHandler(onLivingEntityDeadHandlerId);
             }
@@ -61,9 +64,12 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
         this.playerMemory.keySet()
             .stream()
             .map(playerUuid -> mob.world.getPlayerByUuid(playerUuid))
+            .filter(Objects::nonNull)
             .map((player) -> new Pair<>(player, mob.distanceTo(player)))
-            .filter((playerDistancePair) -> playerDistancePair.getRight() <= maximalReactionDistance)
             .min(Comparator.comparing(Pair::getRight))
-            .ifPresent((playerDistancePair) -> this.targetEntity = playerDistancePair.getLeft());
+            .ifPresent((playerDistancePair) -> {
+                this.targetEntity = playerDistancePair.getLeft();
+                this.playerMemory.clear();
+            });
     }
 }

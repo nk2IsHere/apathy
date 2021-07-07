@@ -1,30 +1,40 @@
 package eu.nk2.apathy.context;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public interface OnBlockBrokenEventRegistry {
 
-    void registerOnBlockBrokenHandler(OnBlockBrokenEventHandler handler);
-    void publishOnBlockBrokenEvent(World world, BlockPos pos, BlockState state, PlayerEntity player);
+    UUID registerOnBlockBrokenHandler(OnBlockBrokenEventHandler handler);
+    void unregisterOnBlockBrokenHandler(UUID handlerId);
+    void publishOnBlockBrokenEvent(BlockPos pos, BlockState state, PlayerEntity player);
 
     OnBlockBrokenEventRegistry INSTANCE = new OnBlockBrokenEventRegistry() {
 
-        private final ArrayList<OnBlockBrokenEventHandler> onBlockBrokenEventHandlers = new ArrayList<>();
+        private final Map<UUID, OnBlockBrokenEventHandler> onBlockBrokenEventHandlers = new ConcurrentHashMap<>();
 
         @Override
-        public void registerOnBlockBrokenHandler(OnBlockBrokenEventHandler handler) {
-            onBlockBrokenEventHandlers.add(handler);
+        public UUID registerOnBlockBrokenHandler(OnBlockBrokenEventHandler handler) {
+            UUID handlerId = UUID.randomUUID();
+            onBlockBrokenEventHandlers.put(handlerId, handler);
+
+            return handlerId;
         }
 
         @Override
-        public void publishOnBlockBrokenEvent(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-            onBlockBrokenEventHandlers.forEach(handler -> handler.onBlockBroken(world, pos, state, player));
+        public void unregisterOnBlockBrokenHandler(UUID handlerId) {
+            onBlockBrokenEventHandlers.remove(handlerId);
+        }
+
+        @Override
+        public void publishOnBlockBrokenEvent(BlockPos pos, BlockState state, PlayerEntity player) {
+            onBlockBrokenEventHandlers.values()
+                .forEach(handler -> handler.onBlockBroken(pos, state, player.getUuid()));
         }
     };
 }

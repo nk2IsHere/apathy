@@ -1,11 +1,11 @@
 package eu.nk2.apathy.context;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+
+import java.util.UUID;
 
 @FunctionalInterface
 public interface OnBlockBrokenEventHandler {
-    void onBlockBroken(World world, BlockPos pos, BlockState state, PlayerEntity player);
+    void onBlockBroken(BlockPos pos, BlockState state, UUID playerUuid);
 }

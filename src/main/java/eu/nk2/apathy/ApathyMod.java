@@ -2,6 +2,7 @@ package eu.nk2.apathy;
 
 import eu.nk2.apathy.goal.ApathyDoNotFollowTargetGoal;
 import eu.nk2.apathy.goal.ApathyIfBlockBrokenFollowTargetGoal;
+import eu.nk2.apathy.goal.ApathyIfItemSelectedFollowTargetGoal;
 import eu.nk2.apathy.mixin.*;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.entity.Entity;
@@ -12,6 +13,7 @@ import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.registry.Registry;
@@ -103,14 +105,14 @@ public class ApathyMod implements ModInitializer {
 									targetSelectorSet.remove(goal);
 									targetSelectorSet.add(new PrioritizedGoal(
 										goal.getPriority(),
-										new ApathyIfBlockBrokenFollowTargetGoal(
+										new ApathyIfItemSelectedFollowTargetGoal(
 											(MobEntity) entity,
 											followTargetGoalAccessor.getReciprocalChance(),
 											trackTargetGoalAccessor.getCheckVisibility(),
 											trackTargetGoalAccessor.getCheckVisibility(),
 											followTargetGoalAccessor.getTargetPredicate(),
 											16.0f,
-											Registry.BLOCK.get(Identifier.tryParse("minecraft:sandstone"))
+											new ItemStack(Registry.ITEM.get(Identifier.tryParse("minecraft:netherite_sword")), 1)
 										)
 									));
 								});

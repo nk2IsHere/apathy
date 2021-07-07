@@ -9,6 +9,7 @@
     "ApathyMixinFollowTargetGoalAccessor",
     "ApathyMixinGoalSelectorAccessor",
     "ApathyMixinMobEntityAccessor",
+    "ApathyMixinLivingEntityInjector",
     "ApathyMixinServerPlayerEntityInjector",
     "ApathyMixinTrackTargetGoalAccessor"
   ],

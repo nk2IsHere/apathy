@@ -44,8 +44,8 @@ Configuration example of `apathy.hjson` given:
 	    {
 	        "type": "if_item_selected",
 	        "maximal_reaction_distance": 32.0,
-            "reaction_item": "minecraft:zombie_spawn_egg",
-            "reaction_item_count": 16
+                "reaction_item": "minecraft:zombie_spawn_egg",
+                "reaction_item_count": 16
 	    }
 	]
 }

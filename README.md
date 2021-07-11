@@ -3,7 +3,7 @@
 Make mobs apathetic up until you attack
 Literally, thats it.
 
-Or is it?
+Or is it?\
 Configuration example of `apathy.hjson` given:
 ```
 {

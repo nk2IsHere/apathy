@@ -45,7 +45,7 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
 
             logger.info("[" + this.mob + "] Block broken: " + playerUuid + " " + state);
             if(state.getBlock().is(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
-                logger.info("[" + this.mob + "] Perform follow on: " + playerUuid);
+                logger.info("[" + this.mob + "] Add to memory: " + playerUuid);
                 playerMemory.put(playerUuid, state);
             }
         });

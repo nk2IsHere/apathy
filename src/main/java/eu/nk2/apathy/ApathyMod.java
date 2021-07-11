@@ -1,5 +1,7 @@
 package eu.nk2.apathy;
 
+import eu.nk2.apathy.context.ApathyConfig;
+import eu.nk2.apathy.context.ApathyConfigLoader;
 import eu.nk2.apathy.goal.ApathyDoNotFollowTargetGoal;
 import eu.nk2.apathy.goal.ApathyIfBlockBrokenFollowTargetGoal;
 import eu.nk2.apathy.goal.ApathyIfItemSelectedFollowTargetGoal;
@@ -20,19 +22,19 @@ import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ApathyMod implements ModInitializer {
 
-	private final Logger log = LogManager.getLogger();
+	private final Logger logger = LogManager.getLogger("Apathy");
 
 	private EntityType.EntityFactory<Entity> getEntityFactory(EntityType<Entity> entityType) {
 		try {
 			return ((ApathyMixinEntityFactoryAccessor) entityType).getFactory();
 		} catch (Exception e) {
-			log.error("For " + entityType.toString() + ": ", e);
+			logger.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
 	}
@@ -42,7 +44,7 @@ public class ApathyMod implements ModInitializer {
 			((ApathyMixinEntityFactoryAccessor) entityType).setFactory(entityFactory);
 			return entityType;
 		} catch (Exception e) {
-			log.error("For " + entityType.toString() + ": ", e);
+			logger.error("For " + entityType.toString() + ": ", e);
 			return null;
 		}
 	}
@@ -65,7 +67,7 @@ public class ApathyMod implements ModInitializer {
 
 			return ((ApathyMixinGoalSelectorAccessor) goalSelector).getGoals();
 		} catch (Exception e) {
-			log.error("For " + mobEntity.toString() + ": ", e);
+			logger.error("For " + mobEntity.toString() + ": ", e);
 			return null;
 		}
 	}
@@ -75,13 +77,95 @@ public class ApathyMod implements ModInitializer {
 			Class<?> targetClass = ((ApathyMixinFollowTargetGoalAccessor) followTargetGoal).getTargetClass();
 			return targetClass.equals(PlayerEntity.class);
 		} catch (Exception e) {
-			log.error("For " + followTargetGoal.toString() + ": ", e);
+			logger.error("For " + followTargetGoal.toString() + ": ", e);
 			return false;
+		}
+	}
+
+	private void updateMobSetApathyGoal(MobEntity entity, Set<Goal> targetSelectorSet, int priority, FollowTargetGoal<PlayerEntity> followTargetGoal, ApathyConfig.ApathyBehaviourType apathyBehaviourType) {
+		ApathyMixinFollowTargetGoalAccessor followTargetGoalAccessor = (ApathyMixinFollowTargetGoalAccessor) followTargetGoal;
+		ApathyMixinTrackTargetGoalAccessor trackTargetGoalAccessor = (ApathyMixinTrackTargetGoalAccessor) followTargetGoal;
+
+		logger.info("[" + entity + "] Applied " + apathyBehaviourType);
+		if(apathyBehaviourType instanceof ApathyConfig.ApathyBehaviourDoNotFollowType) {
+			targetSelectorSet.add(new PrioritizedGoal(
+				priority,
+				new ApathyDoNotFollowTargetGoal<>(
+					entity,
+					PlayerEntity.class,
+					followTargetGoalAccessor.getReciprocalChance(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					followTargetGoalAccessor.getTargetPredicate()
+				)
+			));
+		} else if(apathyBehaviourType instanceof ApathyConfig.ApathyBehaviourIfBlockBrokenType) {
+			ApathyConfig.ApathyBehaviourIfBlockBrokenType ifBlockBrokenBehaviour = (ApathyConfig.ApathyBehaviourIfBlockBrokenType) apathyBehaviourType;
+			targetSelectorSet.add(new PrioritizedGoal(
+				priority,
+				new ApathyIfBlockBrokenFollowTargetGoal(
+					entity,
+					followTargetGoalAccessor.getReciprocalChance(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					followTargetGoalAccessor.getTargetPredicate(),
+					ifBlockBrokenBehaviour.getMaximalReactionDistance(),
+					ifBlockBrokenBehaviour.getReactionBlock()
+				)
+			));
+		} else if(apathyBehaviourType instanceof ApathyConfig.ApathyBehaviourIfItemSelectedType) {
+			ApathyConfig.ApathyBehaviourIfItemSelectedType ifItemSelectedBehaviour = (ApathyConfig.ApathyBehaviourIfItemSelectedType) apathyBehaviourType;
+			targetSelectorSet.add(new PrioritizedGoal(
+				priority,
+				new ApathyIfItemSelectedFollowTargetGoal(
+					entity,
+					followTargetGoalAccessor.getReciprocalChance(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					trackTargetGoalAccessor.getCheckVisibility(),
+					followTargetGoalAccessor.getTargetPredicate(),
+					ifItemSelectedBehaviour.getMaximalReactionDistance(),
+					ifItemSelectedBehaviour.getReactionItem(),
+					ifItemSelectedBehaviour.getReactionItemCount()
+				)
+			));
+		}
+	}
+
+	private void updateMobSetApathyGoals(ApathyConfig apathyConfig, MobEntity entity, Set<Goal> targetSelectorSet, int priority, FollowTargetGoal<PlayerEntity> followTargetGoal) {
+		List<ApathyConfig.ApathyBehaviourType> defaultApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().getOrDefault(null, new ArrayList<>());
+		List<ApathyConfig.ApathyBehaviourType> mobSpecificApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().get(Registry.ENTITY_TYPE.getId(entity.getType()));
+
+		if(mobSpecificApathyBehaviourType == null) {
+			defaultApathyBehaviourType.forEach(apathyBehaviourType -> updateMobSetApathyGoal(
+				entity,
+				targetSelectorSet,
+				priority,
+				followTargetGoal,
+				apathyBehaviourType
+			));
+		} else {
+			mobSpecificApathyBehaviourType.forEach(apathyBehaviourType -> updateMobSetApathyGoal(
+				entity,
+				targetSelectorSet,
+				priority,
+				followTargetGoal,
+				apathyBehaviourType
+			));
 		}
 	}
 
 	@Override
 	public void onInitialize() {
+		ApathyConfig apathyConfig;
+		try {
+			apathyConfig = ApathyConfigLoader.loadConfig();
+		} catch (IOException e) {
+			apathyConfig = new ApathyConfig(new HashMap<>());
+		}
+
+		logger.info("Loaded with config: " + apathyConfig);
+
+		ApathyConfig finalApathyConfig = apathyConfig;
 		Registry.ENTITY_TYPE.getEntries()
 				.stream()
 				.map(Map.Entry::getValue)
@@ -99,22 +183,9 @@ public class ApathyMod implements ModInitializer {
 								.collect(Collectors.toList())
 								.forEach((PrioritizedGoal goal) -> {
 									FollowTargetGoal<PlayerEntity> followTargetGoal = (FollowTargetGoal<PlayerEntity>) goal.getGoal();
-									ApathyMixinFollowTargetGoalAccessor followTargetGoalAccessor = (ApathyMixinFollowTargetGoalAccessor) followTargetGoal;
-									ApathyMixinTrackTargetGoalAccessor trackTargetGoalAccessor = (ApathyMixinTrackTargetGoalAccessor) followTargetGoal;
 
 									targetSelectorSet.remove(goal);
-									targetSelectorSet.add(new PrioritizedGoal(
-										goal.getPriority(),
-										new ApathyIfItemSelectedFollowTargetGoal(
-											(MobEntity) entity,
-											followTargetGoalAccessor.getReciprocalChance(),
-											trackTargetGoalAccessor.getCheckVisibility(),
-											trackTargetGoalAccessor.getCheckVisibility(),
-											followTargetGoalAccessor.getTargetPredicate(),
-											16.0f,
-											new ItemStack(Registry.ITEM.get(Identifier.tryParse("minecraft:netherite_sword")), 1)
-										)
-									));
+									updateMobSetApathyGoals(finalApathyConfig, (MobEntity) entity, targetSelectorSet, goal.getPriority(), followTargetGoal);
 								});
 					}
 

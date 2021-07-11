@@ -13,13 +13,16 @@
     "sources": "https://github.com/nk2ishere/apathy/"
   },
 
-  "license": "CC0-1.0",
+  "license": "WTFPL",
   "icon": "assets/apathy/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
       "eu.nk2.apathy.ApathyMod"
+    ],
+    "modmenu": [
+      "eu.nk2.apathy.external.ApathyModMenuIntegration"
     ]
   },
   "mixins": [

@@ -1,7 +1,8 @@
+
 plugins {
 	id 'fabric-loom' version '0.5-SNAPSHOT'
 	id 'maven-publish'
-	id 'com.github.johnrengelman.shadow' version '4.0.4'
+	id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -20,6 +21,26 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	shadow "blue.endless:jankson:${project.jankson_version}"
+}
+
+// shadowing the libraries
+import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
+
+shadowJar {
+	configurations = [project.configurations.shadow]
+	classifier 'shadow-dev'
+}
+
+task relocateShadowJar(type: ConfigureShadowRelocation) {
+	target = tasks.shadowJar
+	prefix = "${project.group}.${project.archives_base_name}.shadow"
+}
+tasks.shadowJar.dependsOn tasks.relocateShadowJar
+
+remapJar {
+	dependsOn shadowJar
+	mustRunAfter shadowJar
+	input.set shadowJar.archiveFile.get()
 }
 
 processResources {

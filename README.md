@@ -1,4 +1,4 @@
-# Apathy for 1.16.5
+# Apathy for 1.16.5, requires Fabric API
 
 Make mobs apathetic up until you attack
 Literally, thats it.

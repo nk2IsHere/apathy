@@ -2,12 +2,12 @@ package eu.nk2.apathy.goal;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.ai.goal.FollowTargetGoal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.mob.MobEntity;
 
-public class ApathyDoNotFollowTargetGoal<T extends LivingEntity> extends FollowTargetGoal<T> {
+public class ApathyDoNotActiveTargetGoal<T extends LivingEntity> extends ActiveTargetGoal<T> {
 
-    public ApathyDoNotFollowTargetGoal(
+    public ApathyDoNotActiveTargetGoal(
         MobEntity mob,
         Class<T> targetClass,
         int reciprocalChance,

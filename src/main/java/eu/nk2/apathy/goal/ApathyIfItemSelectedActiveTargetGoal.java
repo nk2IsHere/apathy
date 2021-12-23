@@ -2,7 +2,7 @@ package eu.nk2.apathy.goal;
 
 import eu.nk2.apathy.context.*;
 import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.ai.goal.FollowTargetGoal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
-public class ApathyIfItemSelectedFollowTargetGoal extends FollowTargetGoal<PlayerEntity> {
+public class ApathyIfItemSelectedActiveTargetGoal extends ActiveTargetGoal<PlayerEntity> {
     private final Logger logger = LogManager.getLogger("Apathy");
 
     private final float maximalFollowDistance;
@@ -25,7 +25,7 @@ public class ApathyIfItemSelectedFollowTargetGoal extends FollowTargetGoal<Playe
 
     private final Map<UUID, ItemStack> playerMemory = new HashMap<>();
 
-    public ApathyIfItemSelectedFollowTargetGoal(
+    public ApathyIfItemSelectedActiveTargetGoal(
         MobEntity mob,
         int reciprocalChance,
         boolean checkVisibility,
@@ -59,7 +59,7 @@ public class ApathyIfItemSelectedFollowTargetGoal extends FollowTargetGoal<Playe
         });
 
         this.onLivingEntityDeadHandlerId = OnLivingEntityDeadEventRegistry.INSTANCE.registerOnLivingEntityDeadHandler((world, livingEntity, damageSource) -> {
-            if(this.mob.getEntityId() == livingEntity.getEntityId()) {
+            if(this.mob.getId() == livingEntity.getId()) {
                 logger.info("[" + this.mob + "] Unregister goal from events");
                 OnHandStackChangedEventRegistry.INSTANCE.unregisterOnHandStackChangedHandler(onHandStackChangedHandlerId);
                 OnLivingEntityDeadEventRegistry.INSTANCE.unregisterOnLivingEntityDeadHandler(onLivingEntityDeadHandlerId);

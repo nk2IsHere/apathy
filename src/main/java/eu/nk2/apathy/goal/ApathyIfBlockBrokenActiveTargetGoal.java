@@ -5,7 +5,7 @@ import eu.nk2.apathy.context.OnLivingEntityDeadEventRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.ai.goal.FollowTargetGoal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
-public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<PlayerEntity> {
+public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<PlayerEntity> {
     private final Logger logger = LogManager.getLogger("Apathy");
 
     private final float maximalReactionDistance;
@@ -25,7 +25,7 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
 
     private final Map<UUID, BlockState> playerMemory = new HashMap<>();
 
-    public ApathyIfBlockBrokenFollowTargetGoal(
+    public ApathyIfBlockBrokenActiveTargetGoal(
         MobEntity mob,
         int reciprocalChance,
         boolean checkVisibility,
@@ -44,14 +44,14 @@ public class ApathyIfBlockBrokenFollowTargetGoal extends FollowTargetGoal<Player
             if(player == null) return;
 
             logger.info("[" + this.mob + "] Block broken: " + playerUuid + " " + state);
-            if(state.getBlock().is(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
+            if(state.getBlock().getDefaultState().isOf(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
                 logger.info("[" + this.mob + "] Add to memory: " + playerUuid);
                 playerMemory.put(playerUuid, state);
             }
         });
 
         this.onLivingEntityDeadHandlerId = OnLivingEntityDeadEventRegistry.INSTANCE.registerOnLivingEntityDeadHandler((world, livingEntity, damageSource) -> {
-            if(this.mob.getEntityId() == livingEntity.getEntityId()) {
+            if(this.mob.getId() == livingEntity.getId()) {
                 logger.info("[" + this.mob + "] Unregister goal from events");
                 OnBlockBrokenEventRegistry.INSTANCE.unregisterOnBlockBrokenHandler(onBlockBrokenHandlerId);
                 OnLivingEntityDeadEventRegistry.INSTANCE.unregisterOnLivingEntityDeadHandler(onLivingEntityDeadHandlerId);

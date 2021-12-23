@@ -2,21 +2,20 @@ package eu.nk2.apathy;
 
 import eu.nk2.apathy.context.ApathyConfig;
 import eu.nk2.apathy.context.ApathyConfigLoader;
-import eu.nk2.apathy.goal.ApathyDoNotFollowTargetGoal;
-import eu.nk2.apathy.goal.ApathyIfBlockBrokenFollowTargetGoal;
-import eu.nk2.apathy.goal.ApathyIfItemSelectedFollowTargetGoal;
+import eu.nk2.apathy.context.ApathyMixinEntityTypeAccessor;
+import eu.nk2.apathy.goal.ApathyDoNotActiveTargetGoal;
+import eu.nk2.apathy.goal.ApathyIfBlockBrokenActiveTargetGoal;
+import eu.nk2.apathy.goal.ApathyIfItemSelectedActiveTargetGoal;
 import eu.nk2.apathy.mixin.*;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.FollowTargetGoal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +31,7 @@ public class ApathyMod implements ModInitializer {
 
 	private EntityType.EntityFactory<Entity> getEntityFactory(EntityType<Entity> entityType) {
 		try {
-			return ((ApathyMixinEntityFactoryAccessor) entityType).getFactory();
+			return ((ApathyMixinEntityTypeAccessor) entityType).getFactory();
 		} catch (Exception e) {
 			logger.error("For " + entityType.toString() + ": ", e);
 			return null;
@@ -41,7 +40,7 @@ public class ApathyMod implements ModInitializer {
 
 	private EntityType<Entity> setEntityFactory(EntityType<Entity> entityType, EntityType.EntityFactory<Entity> entityFactory) {
 		try {
-			((ApathyMixinEntityFactoryAccessor) entityType).setFactory(entityFactory);
+			((ApathyMixinEntityTypeAccessor) entityType).setCustomFactory(entityFactory);
 			return entityType;
 		} catch (Exception e) {
 			logger.error("For " + entityType.toString() + ": ", e);
@@ -72,9 +71,9 @@ public class ApathyMod implements ModInitializer {
 		}
 	}
 
-	private boolean isPlayerFollowTargetGoal(FollowTargetGoal<?> followTargetGoal) {
+	private boolean isPlayerActiveTargetGoal(ActiveTargetGoal<?> followTargetGoal) {
 		try {
-			Class<?> targetClass = ((ApathyMixinFollowTargetGoalAccessor) followTargetGoal).getTargetClass();
+			Class<?> targetClass = ((ApathyMixinActiveTargetGoalAccessor) followTargetGoal).getTargetClass();
 			return targetClass.equals(PlayerEntity.class);
 		} catch (Exception e) {
 			logger.error("For " + followTargetGoal.toString() + ": ", e);
@@ -82,15 +81,15 @@ public class ApathyMod implements ModInitializer {
 		}
 	}
 
-	private void updateMobSetApathyGoal(MobEntity entity, Set<Goal> targetSelectorSet, int priority, FollowTargetGoal<PlayerEntity> followTargetGoal, ApathyConfig.ApathyBehaviourType apathyBehaviourType) {
-		ApathyMixinFollowTargetGoalAccessor followTargetGoalAccessor = (ApathyMixinFollowTargetGoalAccessor) followTargetGoal;
+	private void updateMobSetApathyGoal(MobEntity entity, Set<Goal> targetSelectorSet, int priority, ActiveTargetGoal<PlayerEntity> followTargetGoal, ApathyConfig.ApathyBehaviourType apathyBehaviourType) {
+		ApathyMixinActiveTargetGoalAccessor followTargetGoalAccessor = (ApathyMixinActiveTargetGoalAccessor) followTargetGoal;
 		ApathyMixinTrackTargetGoalAccessor trackTargetGoalAccessor = (ApathyMixinTrackTargetGoalAccessor) followTargetGoal;
 
-		logger.info("[" + entity + "] Applied " + apathyBehaviourType);
+		logger.debug("[" + entity + "] Applied " + apathyBehaviourType);
 		if(apathyBehaviourType instanceof ApathyConfig.ApathyBehaviourDoNotFollowType) {
 			targetSelectorSet.add(new PrioritizedGoal(
 				priority,
-				new ApathyDoNotFollowTargetGoal<>(
+				new ApathyDoNotActiveTargetGoal<>(
 					entity,
 					PlayerEntity.class,
 					followTargetGoalAccessor.getReciprocalChance(),
@@ -103,7 +102,7 @@ public class ApathyMod implements ModInitializer {
 			ApathyConfig.ApathyBehaviourIfBlockBrokenType ifBlockBrokenBehaviour = (ApathyConfig.ApathyBehaviourIfBlockBrokenType) apathyBehaviourType;
 			targetSelectorSet.add(new PrioritizedGoal(
 				priority,
-				new ApathyIfBlockBrokenFollowTargetGoal(
+				new ApathyIfBlockBrokenActiveTargetGoal(
 					entity,
 					followTargetGoalAccessor.getReciprocalChance(),
 					trackTargetGoalAccessor.getCheckVisibility(),
@@ -117,7 +116,7 @@ public class ApathyMod implements ModInitializer {
 			ApathyConfig.ApathyBehaviourIfItemSelectedType ifItemSelectedBehaviour = (ApathyConfig.ApathyBehaviourIfItemSelectedType) apathyBehaviourType;
 			targetSelectorSet.add(new PrioritizedGoal(
 				priority,
-				new ApathyIfItemSelectedFollowTargetGoal(
+				new ApathyIfItemSelectedActiveTargetGoal(
 					entity,
 					followTargetGoalAccessor.getReciprocalChance(),
 					trackTargetGoalAccessor.getCheckVisibility(),
@@ -131,7 +130,7 @@ public class ApathyMod implements ModInitializer {
 		}
 	}
 
-	private void updateMobSetApathyGoals(ApathyConfig apathyConfig, MobEntity entity, Set<Goal> targetSelectorSet, int priority, FollowTargetGoal<PlayerEntity> followTargetGoal) {
+	private void updateMobSetApathyGoals(ApathyConfig apathyConfig, MobEntity entity, Set<Goal> targetSelectorSet, int priority, ActiveTargetGoal<PlayerEntity> followTargetGoal) {
 		List<ApathyConfig.ApathyBehaviourType> defaultApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().getOrDefault(null, new ArrayList<>());
 		List<ApathyConfig.ApathyBehaviourType> mobSpecificApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().get(Registry.ENTITY_TYPE.getId(entity.getType()));
 
@@ -178,11 +177,11 @@ public class ApathyMod implements ModInitializer {
 						if(targetSelectorSet != null)
 							targetSelectorSet.stream()
 								.map((goal) -> (PrioritizedGoal) goal)
-								.filter((goal) -> goal.getGoal() instanceof FollowTargetGoal)
-								.filter((goal) -> (isPlayerFollowTargetGoal((FollowTargetGoal) goal.getGoal())))
+								.filter((goal) -> goal.getGoal() instanceof ActiveTargetGoal)
+								.filter((goal) -> (isPlayerActiveTargetGoal((ActiveTargetGoal) goal.getGoal())))
 								.collect(Collectors.toList())
 								.forEach((PrioritizedGoal goal) -> {
-									FollowTargetGoal<PlayerEntity> followTargetGoal = (FollowTargetGoal<PlayerEntity>) goal.getGoal();
+									ActiveTargetGoal<PlayerEntity> followTargetGoal = (ActiveTargetGoal<PlayerEntity>) goal.getGoal();
 
 									targetSelectorSet.remove(goal);
 									updateMobSetApathyGoals(finalApathyConfig, (MobEntity) entity, targetSelectorSet, goal.getPriority(), followTargetGoal);

@@ -20,7 +20,7 @@ public class ApathyIfItemSelectedActiveTargetGoal extends ActiveTargetGoal<Playe
     private final Item reactionItem;
     private final int reactionItemCount;
 
-    private UUID onHandStackChangedHandlerId;
+    private final UUID onHandStackChangedHandlerId;
     private UUID onLivingEntityDeadHandlerId;
 
     private final Map<UUID, ItemStack> playerMemory = new HashMap<>();

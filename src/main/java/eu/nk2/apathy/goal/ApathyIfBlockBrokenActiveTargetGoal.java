@@ -20,7 +20,7 @@ public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<Player
     private final float maximalReactionDistance;
     private final Block reactionBlock;
 
-    private UUID onBlockBrokenHandlerId;
+    private final UUID onBlockBrokenHandlerId;
     private UUID onLivingEntityDeadHandlerId;
 
     private final Map<UUID, BlockState> playerMemory = new HashMap<>();

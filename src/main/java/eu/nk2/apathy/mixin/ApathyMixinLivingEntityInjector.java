@@ -14,6 +14,6 @@ public class ApathyMixinLivingEntityInjector {
     @Inject(method = "onDeath", at=@At("TAIL"))
     void onDeathInjection(DamageSource damageSource, CallbackInfo ci) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        OnLivingEntityDeadEventRegistry.INSTANCE.publishOnLivingEntityDeadEvent(livingEntity.world, livingEntity, damageSource);
+        OnLivingEntityDeadEventRegistry.INSTANCE.publishOnLivingEntityDeadEvent(livingEntity.getWorld(), livingEntity, damageSource);
     }
 }

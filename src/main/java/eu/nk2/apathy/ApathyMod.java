@@ -16,9 +16,9 @@ import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Pair;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -133,7 +133,7 @@ public class ApathyMod implements ModInitializer {
 
     private void updateMobSetApathyGoals(ApathyConfig apathyConfig, MobEntity entity, Set<Goal> targetSelectorSet, int priority, ActiveTargetGoal<PlayerEntity> followTargetGoal) {
         List<ApathyConfig.ApathyBehaviourType> defaultApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().getOrDefault(null, new ArrayList<>());
-        List<ApathyConfig.ApathyBehaviourType> mobSpecificApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().get(Registry.ENTITY_TYPE.getId(entity.getType()));
+        List<ApathyConfig.ApathyBehaviourType> mobSpecificApathyBehaviourType = apathyConfig.getApathyBehaviourTypeMap().get(Registries.ENTITY_TYPE.getId(entity.getType()));
 
         if(mobSpecificApathyBehaviourType == null) {
             defaultApathyBehaviourType.forEach(apathyBehaviourType -> updateMobSetApathyGoal(
@@ -166,7 +166,7 @@ public class ApathyMod implements ModInitializer {
         logger.info("Loaded with config: " + apathyConfig);
 
         ApathyConfig finalApathyConfig = apathyConfig;
-        Registry.ENTITY_TYPE
+        Registries.ENTITY_TYPE
             .streamEntries()
             .map(RegistryEntry.Reference::value)
             .map((entityType) -> new Pair<>((EntityType<Entity>) entityType, getEntityFactory((EntityType<Entity>) entityType)))

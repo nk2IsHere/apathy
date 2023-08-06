@@ -40,7 +40,7 @@ public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<Player
         this.reactionBlock = reactionBlock;
 
         this.onBlockBrokenHandlerId = OnBlockBrokenEventRegistry.INSTANCE.registerOnBlockBrokenHandler((pos, state, playerUuid) -> {
-            PlayerEntity player = this.mob.world.getPlayerByUuid(playerUuid);
+            PlayerEntity player = this.mob.getWorld().getPlayerByUuid(playerUuid);
             if(player == null) return;
 
             logger.info("[" + this.mob + "] Block broken: " + playerUuid + " " + state);
@@ -63,7 +63,7 @@ public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<Player
     protected void findClosestTarget() {
         this.playerMemory.keySet()
             .stream()
-            .map(playerUuid -> mob.world.getPlayerByUuid(playerUuid))
+            .map(playerUuid -> mob.getWorld().getPlayerByUuid(playerUuid))
             .filter(Objects::nonNull)
             .map((player) -> new Pair<>(player, mob.distanceTo(player)))
             .min(Comparator.comparing(Pair::getRight))

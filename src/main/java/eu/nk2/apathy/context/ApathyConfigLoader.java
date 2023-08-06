@@ -7,8 +7,8 @@ import blue.endless.jankson.JsonPrimitive;
 import blue.endless.jankson.api.SyntaxError;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,13 +52,13 @@ public class ApathyConfigLoader {
                                         case if_block_broken:
                                             return new ApathyConfig.ApathyBehaviourIfBlockBrokenType(
                                                 behaviourEntryObject.get(Float.class, "maximal_reaction_distance"),
-                                                Registry.BLOCK.get(Identifier.tryParse(behaviourEntryObject.get(String.class, "reaction_block")))
+                                                Registries.BLOCK.get(Identifier.tryParse(behaviourEntryObject.get(String.class, "reaction_block")))
                                             );
                                         case if_item_selected:
                                             Integer reactionItemCount = behaviourEntryObject.get(Integer.class, "reaction_item_count");
                                             return new ApathyConfig.ApathyBehaviourIfItemSelectedType(
                                                 behaviourEntryObject.get(Float.class, "maximal_reaction_distance"),
-                                                Registry.ITEM.get(Identifier.tryParse(behaviourEntryObject.get(String.class, "reaction_item"))),
+                                                Registries.ITEM.get(Identifier.tryParse(behaviourEntryObject.get(String.class, "reaction_item"))),
                                                 reactionItemCount != null? reactionItemCount : 0
                                             );
                                     }
@@ -125,14 +125,14 @@ public class ApathyConfigLoader {
                                 value.put("type", new JsonPrimitive(ApathyBehaviourType.if_block_broken.name()));
                                 value.put("maximal_reaction_distance", new JsonPrimitive(ifBlockBrokenBehaviour.getMaximalReactionDistance()));
                                 value.put("reaction_block", new JsonPrimitive(
-                                    Registry.BLOCK.getId(ifBlockBrokenBehaviour.getReactionBlock()).toString()
+                                    Registries.BLOCK.getId(ifBlockBrokenBehaviour.getReactionBlock()).toString()
                                 ));
                             } else if(apathyBehaviourType instanceof ApathyConfig.ApathyBehaviourIfItemSelectedType) {
                                 ApathyConfig.ApathyBehaviourIfItemSelectedType ifItemSelectedBehaviour = (ApathyConfig.ApathyBehaviourIfItemSelectedType) apathyBehaviourType;
                                 value.put("type", new JsonPrimitive(ApathyBehaviourType.if_item_selected.name()));
                                 value.put("maximal_reaction_distance", new JsonPrimitive(ifItemSelectedBehaviour.getMaximalReactionDistance()));
                                 value.put("reaction_item", new JsonPrimitive(
-                                    Registry.ITEM.getId(ifItemSelectedBehaviour.getReactionItem()).toString()
+                                    Registries.ITEM.getId(ifItemSelectedBehaviour.getReactionItem()).toString()
                                 ));
                                 value.put("reaction_item_count", new JsonPrimitive(ifItemSelectedBehaviour.getReactionItemCount()));
                             }

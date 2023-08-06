@@ -72,7 +72,7 @@ public class ApathyIfItemSelectedActiveTargetGoal extends ActiveTargetGoal<Playe
     protected void findClosestTarget() {
         this.playerMemory.keySet()
             .stream()
-            .map(playerUuid -> mob.world.getPlayerByUuid(playerUuid))
+            .map(playerUuid -> mob.getWorld().getPlayerByUuid(playerUuid))
             .filter(Objects::nonNull)
             .map((player) -> new Pair<>(player, mob.distanceTo(player)))
             .filter((playerDistancePair) -> playerDistancePair.getRight() <= maximalFollowDistance)

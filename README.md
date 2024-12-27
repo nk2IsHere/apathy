@@ -1,9 +1,7 @@
-# Apathy for 1.20.1, requires Fabric API
+# Apathy for 1.21.4, requires Fabric API
 
-Make mobs apathetic up until you attack
-Literally, thats it.
+Make mobs apathetic up until you attack. As simple as one mod can get.
 
-Or is it?\
 Configuration example of `apathy.hjson` given:
 ```json5
 {

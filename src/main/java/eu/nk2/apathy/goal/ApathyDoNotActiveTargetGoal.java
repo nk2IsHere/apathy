@@ -15,7 +15,14 @@ public class ApathyDoNotActiveTargetGoal<T extends LivingEntity> extends ActiveT
         boolean checkCanNavigate,
         TargetPredicate targetPredicate
     ) {
-        super(mob, targetClass, reciprocalChance, checkVisibility, checkCanNavigate, null);
+        super(
+            mob,
+            targetClass,
+            reciprocalChance,
+            checkVisibility,
+            checkCanNavigate,
+            null
+        );
         this.targetPredicate = targetPredicate;
     }
 

@@ -35,32 +35,60 @@ public class ApathyIfItemSelectedActiveTargetGoal extends ActiveTargetGoal<Playe
         Item reactionItem,
         int reactionItemCount
     ) {
-        super(mob, PlayerEntity.class, reciprocalChance, checkVisibility, checkCanNavigate, null);
+        super(
+            mob,
+            PlayerEntity.class,
+            reciprocalChance,
+            checkVisibility,
+            checkCanNavigate,
+            null
+        );
         this.targetPredicate = targetPredicate;
         this.maximalFollowDistance = maximalFollowDistance;
         this.reactionItem = reactionItem;
         this.reactionItemCount = reactionItemCount;
 
         this.onHandStackChangedHandlerId = OnHandStackChangedEventRegistry.INSTANCE.registerOnHandStackChangedHandler((hand, playerUuid, previousStack, currentStack) -> {
-            logger.info("[" + this.mob + "] " + hand.name() + " hand stack changed: " + playerUuid + ", from: " + previousStack + ", to: " + currentStack);
+            logger.info(
+                "[{}] {} hand stack changed: {}, from: {}, to: {}",
+                this.mob,
+                hand.name(),
+                playerUuid,
+                previousStack,
+                currentStack
+            );
 
-            if(currentStack != null && currentStack.getItem() == this.reactionItem
+            if (currentStack != null && currentStack.getItem() == this.reactionItem
                 && (this.reactionItemCount <= 0 || currentStack.getCount() == this.reactionItemCount)) {
-                logger.info("[" + this.mob + "] Add to memory: " + playerUuid);
-                playerMemory.put(playerUuid, currentStack);
+                logger.info(
+                    "[{}] Add to memory: {}",
+                    this.mob,
+                    playerUuid
+                );
+                playerMemory.put(
+                    playerUuid,
+                    currentStack
+                );
             }
 
-            if(previousStack != null && previousStack.getItem() == this.reactionItem
+            if (previousStack != null && previousStack.getItem() == this.reactionItem
                 && currentStack != null && (currentStack.getItem() != this.reactionItem
-                    || this.reactionItemCount > 0 && currentStack.getCount() != this.reactionItemCount)) {
-                logger.info("[" + this.mob + "] Remove from memory: " + playerUuid);
+                || this.reactionItemCount > 0 && currentStack.getCount() != this.reactionItemCount)) {
+                logger.info(
+                    "[{}] Remove from memory: {}",
+                    this.mob,
+                    playerUuid
+                );
                 playerMemory.remove(playerUuid);
             }
         });
 
         this.onLivingEntityDeadHandlerId = OnLivingEntityDeadEventRegistry.INSTANCE.registerOnLivingEntityDeadHandler((world, livingEntity, damageSource) -> {
-            if(this.mob.getId() == livingEntity.getId()) {
-                logger.info("[" + this.mob + "] Unregister goal from events");
+            if (this.mob.getId() == livingEntity.getId()) {
+                logger.info(
+                    "[{}] Unregister goal from events",
+                    this.mob
+                );
                 OnHandStackChangedEventRegistry.INSTANCE.unregisterOnHandStackChangedHandler(onHandStackChangedHandlerId);
                 OnLivingEntityDeadEventRegistry.INSTANCE.unregisterOnLivingEntityDeadHandler(onLivingEntityDeadHandlerId);
                 playerMemory.clear();
@@ -70,13 +98,19 @@ public class ApathyIfItemSelectedActiveTargetGoal extends ActiveTargetGoal<Playe
 
     @Override
     protected void findClosestTarget() {
-        this.playerMemory.keySet()
+        this.playerMemory
+            .keySet()
             .stream()
-            .map(playerUuid -> mob.getWorld().getPlayerByUuid(playerUuid))
+            .map(playerUuid -> mob
+                .getWorld()
+                .getPlayerByUuid(playerUuid))
             .filter(Objects::nonNull)
-            .map((player) -> new Pair<>(player, mob.distanceTo(player)))
-            .filter((playerDistancePair) -> playerDistancePair.getRight() <= maximalFollowDistance)
+            .map(player -> new Pair<>(
+                player,
+                mob.distanceTo(player)
+            ))
+            .filter(playerDistancePair -> playerDistancePair.getRight() <= maximalFollowDistance)
             .min(Comparator.comparing(Pair::getRight))
-            .ifPresent((playerDistancePair) -> this.targetEntity = playerDistancePair.getLeft());
+            .ifPresent(playerDistancePair -> this.targetEntity = playerDistancePair.getLeft());
     }
 }

@@ -34,25 +34,54 @@ public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<Player
         float maximalReactionDistance,
         Block reactionBlock
     ) {
-        super(mob, PlayerEntity.class, reciprocalChance, checkVisibility, checkCanNavigate, null);
+        super(
+            mob,
+            PlayerEntity.class,
+            reciprocalChance,
+            checkVisibility,
+            checkCanNavigate,
+            null
+        );
         this.targetPredicate = targetPredicate;
         this.maximalReactionDistance = maximalReactionDistance;
         this.reactionBlock = reactionBlock;
 
         this.onBlockBrokenHandlerId = OnBlockBrokenEventRegistry.INSTANCE.registerOnBlockBrokenHandler((pos, state, playerUuid) -> {
-            PlayerEntity player = this.mob.getWorld().getPlayerByUuid(playerUuid);
-            if(player == null) return;
+            PlayerEntity player = this.mob
+                .getWorld()
+                .getPlayerByUuid(playerUuid);
+            if (player == null) {
+                return;
+            }
 
-            logger.info("[" + this.mob + "] Block broken: " + playerUuid + " " + state);
-            if(state.getBlock().getDefaultState().isOf(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
-                logger.info("[" + this.mob + "] Add to memory: " + playerUuid);
-                playerMemory.put(playerUuid, state);
+            logger.info(
+                "[{}] Block broken: {} {}",
+                this.mob,
+                playerUuid,
+                state
+            );
+            if (state
+                .getBlock()
+                .getDefaultState()
+                .isOf(this.reactionBlock) && mob.distanceTo(player) <= this.maximalReactionDistance) {
+                logger.info(
+                    "[{}] Add to memory: {}",
+                    this.mob,
+                    playerUuid
+                );
+                playerMemory.put(
+                    playerUuid,
+                    state
+                );
             }
         });
 
         this.onLivingEntityDeadHandlerId = OnLivingEntityDeadEventRegistry.INSTANCE.registerOnLivingEntityDeadHandler((world, livingEntity, damageSource) -> {
-            if(this.mob.getId() == livingEntity.getId()) {
-                logger.info("[" + this.mob + "] Unregister goal from events");
+            if (this.mob.getId() == livingEntity.getId()) {
+                logger.info(
+                    "[{}] Unregister goal from events",
+                    this.mob
+                );
                 OnBlockBrokenEventRegistry.INSTANCE.unregisterOnBlockBrokenHandler(onBlockBrokenHandlerId);
                 OnLivingEntityDeadEventRegistry.INSTANCE.unregisterOnLivingEntityDeadHandler(onLivingEntityDeadHandlerId);
             }
@@ -61,13 +90,19 @@ public class ApathyIfBlockBrokenActiveTargetGoal extends ActiveTargetGoal<Player
 
     @Override
     protected void findClosestTarget() {
-        this.playerMemory.keySet()
+        this.playerMemory
+            .keySet()
             .stream()
-            .map(playerUuid -> mob.getWorld().getPlayerByUuid(playerUuid))
+            .map(playerUuid -> mob
+                .getWorld()
+                .getPlayerByUuid(playerUuid))
             .filter(Objects::nonNull)
-            .map((player) -> new Pair<>(player, mob.distanceTo(player)))
+            .map(player -> new Pair<>(
+                player,
+                mob.distanceTo(player)
+            ))
             .min(Comparator.comparing(Pair::getRight))
-            .ifPresent((playerDistancePair) -> {
+            .ifPresent(playerDistancePair -> {
                 this.targetEntity = playerDistancePair.getLeft();
                 this.playerMemory.clear();
             });

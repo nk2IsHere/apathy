@@ -26,10 +26,9 @@ public abstract class ApathyMixinEntityTypeInjector<T extends Entity> implements
     }
 
     //public T create(World world)
-    @Inject(method = "create(Lnet/minecraft/world/World;Lnet/minecraft/entity/SpawnReason;)Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "create(Lnet/minecraft/world/World;)Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
     public void createInjection(
         World world,
-        SpawnReason reason,
         CallbackInfoReturnable<T> cir
     ) {
         EntityType<T> entityType = (EntityType<T>) (Object) this;

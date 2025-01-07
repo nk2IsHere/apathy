@@ -35,7 +35,7 @@ public class ApathyMod implements ModInitializer {
             return ((ApathyMixinEntityTypeAccessor) entityType).getFactory();
         } catch (Exception e) {
             logger.error(
-                "For {}: ",
+                "Getting factory for {}: ",
                 entityType,
                 e
             );
@@ -51,7 +51,7 @@ public class ApathyMod implements ModInitializer {
             ((ApathyMixinEntityTypeAccessor) entityType).apathy$setCustomFactory(entityFactory);
         } catch (Exception e) {
             logger.error(
-                "For {}: ",
+                "Setting factory for {}: ",
                 entityType,
                 e
             );
@@ -76,7 +76,7 @@ public class ApathyMod implements ModInitializer {
             return ((ApathyMixinGoalSelectorAccessor) goalSelector).getGoals();
         } catch (Exception e) {
             logger.error(
-                "For {}: ",
+                "Getting {} for {}: ",
                 mobEntity,
                 e
             );
@@ -216,9 +216,19 @@ public class ApathyMod implements ModInitializer {
             .forEach(entityTypeToFactory -> setEntityFactory(
                 entityTypeToFactory.getLeft(),
                 (type, world) -> {
-                    var entity = entityTypeToFactory
-                        .getRight()
-                        .create(type, world);
+                    Entity entity;
+                    try {
+                        entity = entityTypeToFactory
+                            .getRight()
+                            .create(type, world);
+                    } catch (Exception e) {
+                        logger.error(
+                            "Creating entity for {}: ",
+                            entityTypeToFactory.getLeft(),
+                            e
+                        );
+                        return null;
+                    }
 
                     if (!(entity instanceof MobEntity mobEntity)) {
                         return entity;

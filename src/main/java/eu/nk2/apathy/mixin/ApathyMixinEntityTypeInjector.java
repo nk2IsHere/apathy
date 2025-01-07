@@ -31,7 +31,13 @@ public abstract class ApathyMixinEntityTypeInjector<T extends Entity> implements
         World world,
         CallbackInfoReturnable<T> cir
     ) {
-        EntityType<T> entityType = (EntityType<T>) (Object) this;
-        if(customFactory != null) cir.setReturnValue(customFactory.create(entityType, world));
+        var entityType = (EntityType<T>) (Object) this;
+        var factory = customFactory != null ? customFactory : getFactory();
+
+        cir.setReturnValue(
+            entityType.isEnabled(world.getEnabledFeatures())
+                ? factory.create(entityType, world)
+                : null
+        );
     }
 }
